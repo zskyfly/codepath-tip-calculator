@@ -10,7 +10,8 @@ import UIKit
 
 class SettingsViewController: UIViewController {
     
-    let defaultTipPercentages = [0.15, 0.18, 0.20, 0.45, 0.12, 0.32]
+    let defaultTipPercentages = [0.15, 0.18, 0.20]
+    let maxNumberOfTipPercentages = 8
     let keyTipPercentageIndex = "tip_percentage_index"
     let keyTipPercentages = "tip_percentages"
     
@@ -24,6 +25,7 @@ class SettingsViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         buildSettingsViewTipControllers()
+        initAddTipControls(true)
     }
 
     override func didReceiveMemoryWarning() {
@@ -44,6 +46,7 @@ class SettingsViewController: UIViewController {
         setDefaultTipPercentages(defaultTipPercentages)
         setDefaultTipPercentageIndex(0)
         buildSettingsViewTipControllers()
+        initAddTipControls(true)
     }
     
     @IBAction func onEditAddTipSlider(sender: AnyObject) {
@@ -57,29 +60,21 @@ class SettingsViewController: UIViewController {
         addDefaultTipPercentage(tipPercentageToAdd)
     }
     
-    func initAddTipControls() {
+    func initAddTipControls(resetSlider: Bool = false) {
         let allTipPercentages = getDefaultTipPercentages()
-        let highestTipPercentage = allTipPercentages.last!
-        var suggestedTipPercentage = highestTipPercentage
-        while allTipPercentages.contains(suggestedTipPercentage) {
-            if suggestedTipPercentage < 1.0 {
-                suggestedTipPercentage += 0.01
-                print("incrementing to \(suggestedTipPercentage)")
-            } else {
-                suggestedTipPercentage -= 0.01
-                print("decrementing to \(suggestedTipPercentage)")
-            }
+        if resetSlider {
+            let highestTipPercentage = allTipPercentages.last!
+            let suggestedTipPercentage = highestTipPercentage * 100.00
+            addTipSlider.value = Float(suggestedTipPercentage)
         }
-        suggestedTipPercentage = suggestedTipPercentage * 100.0
-        addTipSlider.value = Float32(suggestedTipPercentage)
-        let currentSliderValue = Int(suggestedTipPercentage)
+        let currentSliderValue = Int(addTipSlider.value)
         updateAddTipControls(currentSliderValue)
     }
     
     func updateAddTipControls(currentSliderValue: Int) {
         addTipLabel.text = "\(currentSliderValue)%"
         let currentTipPercentage = Double(currentSliderValue) / 100.0
-        if getDefaultTipPercentages().contains(currentTipPercentage) {
+        if (getDefaultTipPercentages().contains(currentTipPercentage) || getDefaultTipPercentages().count == maxNumberOfTipPercentages) {
             addTipButton.enabled = false
         } else {
             addTipButton.enabled = true
@@ -151,7 +146,9 @@ class SettingsViewController: UIViewController {
         ViewController().buildTipControl(tipDefaultControl)
         ViewController().buildTipControl(tipRemovalControl, shouldSetSelected: false)
         if getDefaultTipPercentages().count == 1 {
-            tipRemovalControl.setEnabled(false, forSegmentAtIndex: 0)
+            tipRemovalControl.enabled = false
+        } else {
+            tipRemovalControl.enabled = true
         }
         initAddTipControls()
     }
