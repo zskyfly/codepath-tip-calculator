@@ -30,8 +30,8 @@ GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
 ## Notes
 
-I set up the app for iPhone 5, and had trouble figuring out how to optimize for all iPhone versions and sizes.
-I encountered fun challenges in adding / removing tip percentages, correctly sorting the new values and maintaining the correct default tip percentage.
+- I set up the app for iPhone 5, and had trouble figuring out how to optimize for all iPhone versions and sizes.
+- I encountered fun challenges in adding / removing tip percentages, correctly sorting the new values and maintaining the correct default tip percentage.
 
 ## License
 
