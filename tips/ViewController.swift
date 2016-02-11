@@ -10,19 +10,26 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    let defaultAmountLabelText: String = "$0.00"
+    let keyBillLatestString = "last_bill_string"
+    let keyBillLatestEditTime = "bill_last_edit_time"
+    let billAmountPersistSeconds = 60
+    
     @IBOutlet weak var billField: UITextField!
     @IBOutlet weak var tipLabel: UILabel!
     @IBOutlet weak var totalLabel: UILabel!
     @IBOutlet weak var tipControl: UISegmentedControl!
     
-    let defaultAmountLabelText: String = "$0.00"
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tipLabel.text = defaultAmountLabelText
-        totalLabel.text = defaultAmountLabelText
-        buildTipControl(tipControl)
+        var (billString, editTime) = getLatestBillStringAndEditTime()
+        let secondsSinceLastEdit = Int(NSDate().timeIntervalSince1970) - editTime
+        if secondsSinceLastEdit > billAmountPersistSeconds {
+            billString = ""
+        }
+        billField.text = billString
+        setLabelAmounts(getAmountFromBillString(billField.text!))
     }
 
     override func didReceiveMemoryWarning() {
@@ -34,6 +41,7 @@ class ViewController: UIViewController {
         super.viewWillAppear(animated)
         buildTipControl(tipControl)
         setTipControlSelectedIndex(tipControl)
+        setLabelAmounts(getAmountFromBillString(billField.text!))
     }
     
     override func viewDidAppear(animated: Bool) {
@@ -49,18 +57,44 @@ class ViewController: UIViewController {
     }
     
     @IBAction func onEditingChanged(sender: AnyObject) {
-        let tipPercentages = SettingsViewController().getDefaultTipPercentages()
-        let tipPercentage = tipPercentages[tipControl.selectedSegmentIndex]
-        let billAmount = NSString(string: billField.text!).doubleValue
-        let tipAmount = billAmount * tipPercentage
-        let totalAmount = billAmount + tipAmount
-        
-        tipLabel.text = String(format: "$%.2f", tipAmount)
-        totalLabel.text = String(format: "$%.2f", totalAmount)
+        let billString = billField.text!
+        let billAmount = getAmountFromBillString(billString)
+        setLabelAmounts(billAmount)
+        storeLatestBillStringAndEditTime(billString)
     }
     
     @IBAction func onTap(sender: AnyObject) {
         view.endEditing(true)
+    }
+    
+    func getAmountFromBillString(billString: String) -> (Double) {
+        return NSString(string: billField.text!).doubleValue
+    }
+    
+    func setLabelAmounts(billAmount: Double) {
+        let tipPercentages = SettingsViewController().getDefaultTipPercentages()
+        let tipPercentage = tipPercentages[tipControl.selectedSegmentIndex]
+        let tipAmount = billAmount * tipPercentage
+        let totalAmount = billAmount + tipAmount
+        tipLabel.text = String(format: "$%.2f", tipAmount)
+        totalLabel.text = String(format: "$%.2f", totalAmount)
+    }
+    
+    func storeLatestBillStringAndEditTime(billString: String) {
+        let defaults = NSUserDefaults.standardUserDefaults()
+        let nowSeconds = Int(NSDate().timeIntervalSince1970)
+        defaults.setInteger(nowSeconds, forKey: keyBillLatestEditTime)
+        defaults.setObject(billString, forKey: keyBillLatestString)
+    }
+    
+    func getLatestBillStringAndEditTime() -> (billString: String, editTime: Int) {
+        let defaults = NSUserDefaults.standardUserDefaults()
+        let editTime = defaults.integerForKey(keyBillLatestEditTime)
+        var billString = ""
+        if defaults.objectForKey(keyBillLatestString) != nil {
+            billString = defaults.objectForKey(keyBillLatestString)! as! String
+        }
+        return (billString, editTime)
     }
     
     func buildTipControl(controller: UISegmentedControl, shouldSetSelected: Bool = true) {
