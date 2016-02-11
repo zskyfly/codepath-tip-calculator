@@ -32,6 +32,7 @@ class ViewController: UIViewController {
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
+        buildTipControl(tipControl)
         setTipControlSelectedIndex(tipControl)
     }
     
@@ -48,7 +49,7 @@ class ViewController: UIViewController {
     }
     
     @IBAction func onEditingChanged(sender: AnyObject) {
-        let tipPercentages = SettingsViewController().getTipPercentages()
+        let tipPercentages = SettingsViewController().getDefaultTipPercentages()
         let tipPercentage = tipPercentages[tipControl.selectedSegmentIndex]
         let billAmount = NSString(string: billField.text!).doubleValue
         let tipAmount = billAmount * tipPercentage
@@ -62,10 +63,10 @@ class ViewController: UIViewController {
         view.endEditing(true)
     }
     
-    func buildTipControl(controller: UISegmentedControl) {
+    func buildTipControl(controller: UISegmentedControl, shouldSetSelected: Bool = true) {
         controller.removeAllSegments()
         var index = 0
-        for tipPercentage in SettingsViewController().getTipPercentages() {
+        for tipPercentage in SettingsViewController().getDefaultTipPercentages() {
             controller.insertSegmentWithTitle(
                 String(format: "%.0f%%", tipPercentage * 100),
                 atIndex: index,
@@ -73,7 +74,10 @@ class ViewController: UIViewController {
             )
             index++
         }
-        setTipControlSelectedIndex(controller)
+        if shouldSetSelected {
+            setTipControlSelectedIndex(controller)    
+        }
+        
     }
     
     func setTipControlSelectedIndex(controller: UISegmentedControl) {
